@@ -1,0 +1,101 @@
+using System;
+using TMPro;
+using UnityEngine;
+
+// Purpose: Used to manage interactions between the player and objects in the world that can utilize scripts to perform events
+// Directions: Attach to the [System] GameObject
+// Other notes: 
+
+public class InteractionHandler : MonoBehaviour
+{
+    [Tooltip("Distance from the player to the object before interaction is available")]
+    public float interactDistance;
+
+    [Tooltip("If true, will display the ray from the player to show where interaction is available")]
+    public bool showInteractionRay;
+
+    [Tooltip("Key for the player to press to interact with a given object in the world")]
+    public KeyCode interactKey;
+
+    [Tooltip("Will turn true when an interaction is in range of the player and the player is able to start the interaction process")]
+    [NonSerialized] public bool interactionReady;
+
+    [Tooltip("Object in the world that is being interacted with")]
+    [NonSerialized] public GameObject interactedObject;    
+
+    // Used to display the interaction graphic when interaction is available
+    PrefabManager pm;
+
+    // Used to set the interaction graphic to display the key set by interactionKey
+    TextMeshProUGUI interactText;
+
+    // Singleton to keep the GameObject persisting across scenes
+    public static InteractionHandler instance; 
+
+    void Awake()
+    {
+        Singleton();
+    }
+
+    void Singleton()
+    {
+        if (instance == null) //check if instance exists
+        {
+            instance = this; //if not set the instance to this
+        }
+        else if (instance != this) //if it exists but is not this instance
+        {
+            Destroy(gameObject); //destroy it
+        }
+        DontDestroyOnLoad(gameObject); //set this to be persistable across scenes
+    }
+
+    void Start()
+    {
+        SetVars();
+
+        SetInteractKeyText();
+    }
+
+    void SetVars()
+    {
+        pm = FindAnyObjectByType<PrefabManager>();
+
+        interactText = pm.interactionKeyPanel.GetComponentInChildren<TextMeshProUGUI>();
+    }
+
+    /// <summary>
+    /// Sets the interact key letter text (to lowercase) on the interaction UI graphic
+    /// </summary>
+    void SetInteractKeyText()
+    {
+        string interactKeyLowerCase = interactKey.ToString().ToLower();
+
+        interactText.text = interactKeyLowerCase;
+    }
+
+    void Update()
+    {
+        if (interactionReady && Input.GetKeyDown(interactKey))
+        {
+            Debug.Log("Interacting with " + interactedObject.name);
+
+            BaseInteractable bi = interactedObject.GetComponent<BaseInteractable>();
+            if (bi != null)
+            {
+                bi.OnInteract();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Displays or hides the interaction UI graphic
+    /// </summary>
+    /// <param name="toggle">True to display interaction UI graphic, False to hide it</param>
+    public void ToggleInteraction(bool toggle)
+    {
+        pm.interactionKeyPanel.SetActive(toggle);
+
+        interactionReady = toggle;
+    }
+}
