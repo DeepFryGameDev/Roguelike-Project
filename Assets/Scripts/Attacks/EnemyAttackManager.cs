@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
@@ -8,20 +7,20 @@ using UnityEngine;
 
 public class EnemyAttackManager : MonoBehaviour
 {
-    [Tooltip("Global wait time to wait after attack cooldowns before attack can be fired again")] // Also in AttackManager - can move to a static class eventually
-    public float attackResetPeriod = .2f;
-
     [Tooltip("Set to the parent transform for the enemy's Attack Collision Trigger")]
-    public Transform attackCollisionTriggerTransform;
+    [SerializeField] Transform attackCollisionTriggerTransform;
+    public Transform GetAttackCollisionTriggerTransform() { return attackCollisionTriggerTransform; }
 
     [Tooltip("Set to the transform for where the enemy should be firing the attack from")]
-    public Transform attackParticleSource;
+    [SerializeField] Transform attackParticleSource;
 
-    [NonSerialized] public GameObject enemyObj; // This is the gameObject for the enemy.  Will need to probably replace this eventually.
+    // Set automatically to the player's BasePlayer in Start()
+    BaseEnemy baseEnemy;
+    public BaseEnemy GetBaseEnemy() {  return baseEnemy; }
 
     void Start()
     {
-        enemyObj = gameObject;
+        baseEnemy = GetComponent<BaseEnemy>();
     }
     
     /// <summary>
@@ -31,7 +30,7 @@ public class EnemyAttackManager : MonoBehaviour
     /// <param name="attack">Attack that is being processed</param>
     public void OnTrigger(AttackCollisionTrigger trigger, AttackScriptableObject attack)
     {
-        if (!trigger.onCooldown)
+        if (!trigger.GetOnCooldown())
         {
             StartCoroutine(ProcessAttack(trigger, attack));
         }            
@@ -44,14 +43,14 @@ public class EnemyAttackManager : MonoBehaviour
     /// <param name="attack">Attack that is being processed</param>
     IEnumerator ProcessAttack(AttackCollisionTrigger trigger, AttackScriptableObject attack)
     {
-        if (!trigger.onCooldown)
+        if (!trigger.GetOnCooldown())
         {
-            trigger.onCooldown = true;
+            trigger.SetOnCooldown(true);
 
-            GameObject newParticle = Instantiate(attack.attackParticles[0], attackParticleSource.position, enemyObj.transform.rotation);
+            GameObject newParticle = Instantiate(attack.attackParticles[0], attackParticleSource.position, transform.rotation);
 
             ParticleCollision pc = newParticle.GetComponent<ParticleCollision>();
-            pc.attack = attack;
+            pc.SetAttack(attack);
             pc.sourceUnitType = EnumHandler.UnitTypes.ENEMY;
 
             // Add trigger for player
@@ -69,9 +68,9 @@ public class EnemyAttackManager : MonoBehaviour
             yield return new WaitForSeconds(attack.cooldown);
 
             // wait for reset period (trying .2 seconds)
-            yield return new WaitForSeconds(attackResetPeriod);
+            yield return new WaitForSeconds(CombatManager.attackResetPeriod);
 
-            trigger.onCooldown = false;
+            trigger.SetOnCooldown(false);
         }
     }
 }

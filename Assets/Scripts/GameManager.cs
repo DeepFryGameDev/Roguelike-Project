@@ -1,7 +1,6 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,10 +13,6 @@ public class GameManager : MonoBehaviour
 
     //GOLD
     public int gold;
-
-    //SCENES
-    [ReadOnly] public string sceneToLoad; //to load on collisions
-    [ReadOnly] public string lastScene; //to load after battle
 
     //TIME TRACKING
     [HideInInspector] public int seconds;

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // Purpose: Handles the player's stamina as well as granting them experience
@@ -27,10 +28,12 @@ public class PlayerManager : MonoBehaviour
     [Tooltip("When standing still, the stamina recovery rate is increased by this value")]
     [SerializeField] float standingRecoveryModifier = .5f;
 
-    [Tooltip("Turns true if player has used up all of their stamina and needs to recover fully")]
-    [ReadOnly] public bool stamDepleted;
-    [Tooltip("Turns true if player is not moving")]
-    [ReadOnly] public bool standingStill;
+    // Turns true if player has used up all of their stamina and needs to recover fully
+    bool stamDepleted;
+    public bool GetStamDepleted() { return stamDepleted; }
+    // Turns true if player is not moving
+    bool standingStill;
+    public void SetStandingStill(bool standingStill) { this.standingStill = standingStill; }
 
     bool recoveringStamina; // Turns true if player is recovering stamina from sprinting
     Color baseStamBarColor; // Default value of stamina bar color
@@ -49,7 +52,7 @@ public class PlayerManager : MonoBehaviour
         player = GetComponent<BasePlayer>();
         prefabManager = FindObjectOfType<PrefabManager>();
 
-        baseStamBarColor = prefabManager.stamBarImage.color;
+        baseStamBarColor = prefabManager.GetStaminaBarImage().color;
     }
 
     /// <summary>
@@ -63,26 +66,34 @@ public class PlayerManager : MonoBehaviour
         // update UI
     }
 
+    public void UpdateHealthBar()
+    {
+        float temp = (float)player.GetCurrentHP() / (float)player.GetMaxHP();
+
+        Debug.Log("Current HP: " + player.GetCurrentHP() + " / MaxHP: " + player.GetMaxHP() + " = " + (player.GetCurrentHP() / player.GetMaxHP()));
+        prefabManager.GetHealthSlider().value = temp;
+    }
+
     /// <summary>
     /// Ensures the player has enough stamina to sprint, and if so, lowers the player's stamina
     /// </summary>
     public void ReduceStaminaFromSprint() // called every frame player is moving with sprint held down
     {
-        if (player.currentStamina > 0 && !stamDepleted)
+        if (player.GetCurrentStamina() > 0 && !stamDepleted)
         {
-            player.currentStamina -= ((sprintBase * sprintModifier) * Time.deltaTime);
+            player.SetCurrentStamina(player.GetCurrentStamina() - (sprintBase * sprintModifier) * Time.deltaTime);
 
-            float temp = (player.currentStamina / player.maxStamina) * 1;
+            float temp = (player.GetCurrentStamina() / player.GetMaxStamina());
 
-            prefabManager.staminaSlider.value = temp;
+            prefabManager.GetStaminaSlider().value = temp;
 
             if (!recoveringStamina)
                 recoveringStamina = true;
         }
         
-        if (player.currentStamina <= 0) // Player is out of stamina from running
+        if (player.GetCurrentStamina() <= 0) // Player is out of stamina from running
         {
-            prefabManager.stamBarImage.color = prefabManager.outOfStaminaBarColor;
+            prefabManager.GetStaminaBarImage().color = prefabManager.GetOutOfStaminaBarColor();
             stamDepleted = true;
         }
     }
@@ -92,37 +103,37 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public void RecoverStamina()
     {
-        if (player.currentStamina < player.maxStamina && recoveringStamina)
+        if (player.GetCurrentStamina() < player.GetMaxStamina() && recoveringStamina)
         {
             if (!stamDepleted)
             {
                 if (standingStill)
                 {
-                    player.currentStamina += ((sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime);
+                    player.SetCurrentStamina(player.GetCurrentStamina() + (sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime);
                 }
                 else
                 {
-                    player.currentStamina += ((sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime) * standingRecoveryModifier;
+                    player.SetCurrentStamina(player.GetCurrentStamina() + ((sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime) * standingRecoveryModifier);
                 }
             } else
             {
-                player.currentStamina += ((sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime);
+                player.SetCurrentStamina(player.GetCurrentStamina() + (sprintRecoverBase * sprintRecoverModifier) * Time.deltaTime);
             }
 
 
-            float temp = (player.currentStamina / player.maxStamina) * 1;
+            float temp = player.GetCurrentStamina() / player.GetMaxStamina();
 
-            prefabManager.staminaSlider.value = temp;
+            prefabManager.GetStaminaSlider().value = temp;
         }
 
-        if (player.currentStamina >= player.maxStamina && recoveringStamina)
+        if (player.GetCurrentStamina() >= player.GetMaxStamina() && recoveringStamina)
         {
             recoveringStamina = false;
-            player.currentStamina = player.maxStamina;
+            player.SetCurrentStamina(player.GetMaxStamina());
 
             if (stamDepleted)
             {
-                prefabManager.stamBarImage.color = baseStamBarColor;
+                prefabManager.GetStaminaBarImage().color = baseStamBarColor;
                 stamDepleted = false;
             }            
         }

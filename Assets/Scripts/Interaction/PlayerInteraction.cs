@@ -8,7 +8,7 @@ public class PlayerInteraction : MonoBehaviour
 {
     InteractionHandler ih; // Used to display/hide interaction UI graphic, as well as set the interactedObject
 
-    int layerMask = 1 << 9; // Inverted to only include layerMask 9 (interactable) - this ensures only interactable objects will receive instruction from the raycast
+    int layerMask = 1 << 9; // Set to layer layerInteractable - this ensures only interactable objects will receive instruction from the raycast
 
     void Start()
     {
@@ -33,22 +33,22 @@ public class PlayerInteraction : MonoBehaviour
     {
         RaycastHit hit;
         // Does the ray intersect any objects excluding the player layer
-        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, ih.interactDistance, layerMask))
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, ih.GetInteractDistance(), layerMask))
         {
-            if (ih.showInteractionRay) Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.green);
+            if (ih.GetShowInteractionRay()) Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.green);
 
             ih.ToggleInteraction(true);
-            ih.interactedObject = hit.transform.gameObject;
+            ih.SetInteractedObject(hit.transform.gameObject);
         }
         else
         {
-            if (ih.showInteractionRay) Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * ih.interactDistance, Color.white);
+            if (ih.GetInteractedObject()) Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * ih.GetInteractDistance(), Color.white);
 
             ih.ToggleInteraction(false);
 
-            if (ih.interactedObject != null)
+            if (ih.GetInteractedObject() != null)
             {
-                ih.interactedObject = null;
+                ih.SetInteractedObject(null);
             }
         }
     }

@@ -7,36 +7,44 @@ using UnityEngine;
 public class ThirdPersonCam : MonoBehaviour
 {
     [Tooltip("The transform to be used to determine player's orientation")]
-    public Transform orientation;
+    [SerializeField] Transform orientation;
 
     [Tooltip("The transform of the player, used to calculate view direction")]
-    public Transform player;
+    [SerializeField] Transform player;
 
     [Tooltip("Used with Vector3.slerp to move the camera's view with the player's view direction")]
-    public Transform playerObj;
+    [SerializeField] Transform playerObj;
+
+    [Tooltip("When currentStyle is 'Combat', this is the transform used to keep the camera focused forward")]
+    [SerializeField] Transform combatLookAt;
+
+    [Tooltip("Set to the camera used for third person view")]
+    [SerializeField] GameObject thirdPersonCam;
+
+    [Tooltip("Set to the camera used for Combat camera style")]
+    [SerializeField] GameObject combatCam;
+
+    [Tooltip("Set to the camera used for top-down camera style")]
+    [SerializeField] GameObject topDownCam;
 
     //public Rigidbody rb;
 
     [Tooltip("Rotation speed of the camera as the player moves around")]
-    public float rotationSpeed;
-
-    [Tooltip("When currentStyle is 'Combat', this is the transform used to keep the camera focused forward")]
-    public Transform combatLookAt;
-
-    [Tooltip("Set to the camera used for third person view")]
-    public GameObject thirdPersonCam;
-
-    [Tooltip("Set to the camera used for Combat camera style")]
-    public GameObject combatCam;
-
-    [Tooltip("Set to the camera used for top-down camera style")]
-    public GameObject topDownCam;
+    [SerializeField] float rotationSpeed;
 
     [Tooltip("The default camera mode")]
     public EnumHandler.CameraModes currentMode;
     
 
     void Start()
+    {
+        HideCursor();
+    }
+
+    /// <summary>
+    /// Simply sets the cursor's lockstate to Locked so it stays focused and hides it
+    /// </summary>
+    void HideCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

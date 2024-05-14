@@ -8,32 +8,32 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     [Tooltip("Base speed at which the player moves")]
-    public float moveSpeed;
+    [SerializeField] float moveSpeed;
     [Tooltip("Base speed at which the player moves while sprinting")]
-    public float sprintSpeed;
+    [SerializeField] float sprintSpeed;
 
     [Tooltip("Additional drag to apply to the player while grounded")]
-    public float groundDrag;
+    [SerializeField] float groundDrag;
 
     [Tooltip("Any additional force to add while the player is in the air")]
-    public float airMultiplier;
+    [SerializeField] float airMultiplier;
 
     [Header("Keybinds")]
-    [Tooltip("Key to press to jump (not being used right now)")]
-    public KeyCode jumpKey = KeyCode.Space;
     [Tooltip("Key to hold to sprint")]
-    public KeyCode sprintKey = KeyCode.LeftShift;
+    [SerializeField] KeyCode sprintKey = KeyCode.LeftShift;
+    //[Tooltip("Key to press to jump (not being used right now)")]
+    //[SerializeField] KeyCode jumpKey = KeyCode.Space;
 
     [Header("Ground Check")]
     [Tooltip("Raycast is shot downward from the player's height to ensure they are grounded")]
-    public float playerHeight;
+    [SerializeField] float playerHeight;
     [Tooltip("Layer of ground")]
-    public LayerMask whatIsGround;
+    [SerializeField] LayerMask whatIsGround;
     [Tooltip("Turns true when player is not in the air")]
     bool grounded;
 
     [Tooltip("Set to the Player -> Orientation Transform")]
-    public Transform orientation;
+    [SerializeField] Transform orientation;
 
     float horizontalInput; // Set to any movement from the player along the X axis
     float verticalInput; // Set to any movement from the player along the Y axis
@@ -125,13 +125,13 @@ public class PlayerMovement : MonoBehaviour
                 anim.SetBool("isRunning", true);
 
                 pm.ReduceStaminaFromSprint();
-                pm.standingStill = false;
+                pm.SetStandingStill(false);
             } else
             {
                 anim.SetBool("isWalking", true);
                 anim.SetBool("isRunning", false);
 
-                pm.standingStill = false;
+                pm.SetStandingStill(false);
                 pm.RecoverStamina();
             }
         } else
@@ -139,7 +139,7 @@ public class PlayerMovement : MonoBehaviour
             anim.SetBool("isWalking", false);
             anim.SetBool("isRunning", false);
 
-            pm.standingStill = true;
+            pm.SetStandingStill(true);
             pm.RecoverStamina();
         }
 
@@ -193,7 +193,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     bool canSprint()
     {
-        if (player.currentStamina > 0 && !pm.stamDepleted)
+        if (player.GetCurrentStamina() > 0 && !pm.GetStamDepleted())
         {
             return true;
         }

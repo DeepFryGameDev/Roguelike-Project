@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
@@ -8,14 +7,13 @@ using UnityEngine;
 
 public class AttackManager : MonoBehaviour
 {
-    [Tooltip("Global wait time to wait after attack cooldowns before attack can be fired again")] // Also in EnemyAttackManager - can move to a static class eventually
-    public float attackResetPeriod = .2f;
-    
-    [NonSerialized] public GameObject playerObj; // Set to the player's gameObject in Start()
+    // Set automatically to the player's BasePlayer in Start()
+    BasePlayer basePlayer; 
+    public BasePlayer GetBasePlayer() { return basePlayer; }
 
     void Start()
     {
-        playerObj = gameObject;
+        basePlayer = GetComponent<BasePlayer>();
     }
 
     /// <summary>
@@ -25,7 +23,7 @@ public class AttackManager : MonoBehaviour
     /// <param name="attack">Attack that is being processed</param>
     public void OnTrigger(AttackCollisionTrigger trigger, AttackScriptableObject attack)
     {
-        if (!trigger.onCooldown)
+        if (!trigger.GetOnCooldown())
             StartCoroutine(ProcessAttack(trigger, attack)); 
     }
 
@@ -36,14 +34,14 @@ public class AttackManager : MonoBehaviour
     /// <param name="attack">Attack that is being processed</param>
     IEnumerator ProcessAttack(AttackCollisionTrigger trigger, AttackScriptableObject attack)
     {
-        if (!trigger.onCooldown)
+        if (!trigger.GetOnCooldown())
         {
-            trigger.onCooldown = true;
+            trigger.SetOnCooldown(true);
 
-            GameObject newParticle = Instantiate(attack.attackParticles[0], playerObj.transform.position, playerObj.transform.rotation);
+            GameObject newParticle = Instantiate(attack.attackParticles[0], transform.position, transform.rotation);
 
             ParticleCollision pc = newParticle.GetComponent<ParticleCollision>();
-            pc.attack = attack;
+            pc.SetAttack(attack);
             pc.sourceUnitType = EnumHandler.UnitTypes.PLAYER;
 
             // Add triggers for all enemies in scene
@@ -60,13 +58,21 @@ public class AttackManager : MonoBehaviour
                 ps.trigger.AddCollider(enemy.GetComponent<Collider>());
             }
 
+            // Add triggers for all EnemySpawners
+
+            GameObject[] enemySpawners = GameObject.FindGameObjectsWithTag("EnemySpawner");
+            foreach (GameObject spawner in enemySpawners)
+            {
+                ps.trigger.AddCollider(spawner.GetComponent<Collider>());
+            }
+
             //wait for cooldown of attack
             yield return new WaitForSeconds(attack.cooldown);
 
             // wait for reset period (trying .2 seconds)
-            yield return new WaitForSeconds(attackResetPeriod);
+            yield return new WaitForSeconds(CombatManager.attackResetPeriod);
 
-            trigger.onCooldown = false;
+            trigger.SetOnCooldown(false);
         }   
     }
 }

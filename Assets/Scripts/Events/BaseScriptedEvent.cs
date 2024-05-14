@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,30 +10,11 @@ using UnityEngine.SceneManagement;
 public class BaseScriptedEvent : MonoBehaviour
 {
     //public string method; //name of the method to be run
-
-    [System.NonSerialized] public float baseTextSpeed = 0.030225f; //textSpeed in DialogueEvent (update this if text speed is updated there)
-
-    [System.NonSerialized] public float baseMoveSpeed = 0.5f; //base move speed for movement methods
-
-    [System.NonSerialized] public float collisionDistance = 1;
-
-    [System.NonSerialized] public Transform thisTransform; //transform of the game object this script is attached to
-    [System.NonSerialized] public GameObject thisGameObject; //game object that this script is attached to
-    [System.NonSerialized] public Transform playerTransform; //transform of the player game object
-    [System.NonSerialized] public GameObject playerGameObject; //game object of the player
-    [System.NonSerialized] public GameManager gameManager; //the game manager
-
-    [System.NonSerialized] public bool otherEventRunning = false;
-    [System.NonSerialized] public bool inMenu = false;
-
-    public AttackManager am;
+    GameManager gameManager; //the game manager
 
     public int tempSceneIndex, currentSceneIndex;
 
     //GameMenu menu;
-
-    Transform cursor;
-    bool dpadPressed;
 
     enum cursorModes
     {
@@ -65,13 +47,7 @@ public class BaseScriptedEvent : MonoBehaviour
 
     private void Start()
     {
-        thisGameObject = this.gameObject; //sets thisGameObject to game object this script is attached to
-        thisTransform = this.gameObject.transform; //sets thisTransform to transform of game object this script is attached to
-        playerGameObject = GameObject.Find("Player"); //sets playerGameObject to gameobject of player
-        playerTransform = playerGameObject.transform; //sets playerTransform to transform of gameobject of player
         gameManager = GameObject.Find("[GameManager]").GetComponent<GameManager>(); //sets gameManager to the game manager object in scene
-
-        am = FindObjectOfType<AttackManager>();
 
         messageFinished = true;
     }

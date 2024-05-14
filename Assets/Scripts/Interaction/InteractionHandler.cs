@@ -9,19 +9,23 @@ using UnityEngine;
 public class InteractionHandler : MonoBehaviour
 {
     [Tooltip("Distance from the player to the object before interaction is available")]
-    public float interactDistance;
+    [SerializeField] float interactDistance;
+    public float GetInteractDistance() { return  interactDistance; }
 
     [Tooltip("If true, will display the ray from the player to show where interaction is available")]
-    public bool showInteractionRay;
+    [SerializeField] bool showInteractionRay;
+    public bool GetShowInteractionRay() { return showInteractionRay; }
 
     [Tooltip("Key for the player to press to interact with a given object in the world")]
-    public KeyCode interactKey;
+    [SerializeField] KeyCode interactKey;
 
-    [Tooltip("Will turn true when an interaction is in range of the player and the player is able to start the interaction process")]
-    [NonSerialized] public bool interactionReady;
+    // Will turn true when an interaction is in range of the player and the player is able to start the interaction process
+    bool interactionReady;
 
-    [Tooltip("Object in the world that is being interacted with")]
-    [NonSerialized] public GameObject interactedObject;    
+    // Object in the world that is being interacted with
+    GameObject interactedObject;   
+    public GameObject GetInteractedObject() { return interactedObject; }
+    public void SetInteractedObject(GameObject gameObject) { interactedObject = gameObject;}
 
     // Used to display the interaction graphic when interaction is available
     PrefabManager pm;
@@ -61,7 +65,7 @@ public class InteractionHandler : MonoBehaviour
     {
         pm = FindAnyObjectByType<PrefabManager>();
 
-        interactText = pm.interactionKeyPanel.GetComponentInChildren<TextMeshProUGUI>();
+        interactText = pm.GetInteractionKeyPanel().GetComponentInChildren<TextMeshProUGUI>();
     }
 
     /// <summary>
@@ -94,7 +98,7 @@ public class InteractionHandler : MonoBehaviour
     /// <param name="toggle">True to display interaction UI graphic, False to hide it</param>
     public void ToggleInteraction(bool toggle)
     {
-        pm.interactionKeyPanel.SetActive(toggle);
+        pm.GetInteractionKeyPanel().SetActive(toggle);
 
         interactionReady = toggle;
     }

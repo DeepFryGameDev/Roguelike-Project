@@ -7,10 +7,10 @@ using UnityEngine;
 public class AttackLoader : MonoBehaviour
 {
     [Tooltip("Set to attack collisions parent transform on the player - Used to instantiate attack collisions for the player")]
-    public Transform attackCollisionTriggerTransform;
+    [SerializeField] Transform attackCollisionTriggerTransform;
 
     [Tooltip("Set to BasePlayer class on the player - Used to set the player's basic attack")]
-    public BasePlayer player;
+    [SerializeField] BasePlayer player;
     
     string attackResourcesPath = "AttackScriptableObjects/"; // Points to the path in the resources folder which Attack Scriptable Objects are held
     
@@ -32,8 +32,8 @@ public class AttackLoader : MonoBehaviour
         switch (pm.playerClass)
         {
             case EnumHandler.PlayerClasses.WARRIOR:
-                player.basicAttack = Resources.Load<AttackScriptableObject>(attackResourcesPath + "TestAttack");
-                SetCollisionTriggers(player.basicAttack.collisionTrigger);
+                player.SetBasicAttack(Resources.Load<AttackScriptableObject>(attackResourcesPath + "TestAttack"));
+                SetCollisionTriggers(player.GetBasicAttack().collisionTrigger);
                 break;
         }
     }

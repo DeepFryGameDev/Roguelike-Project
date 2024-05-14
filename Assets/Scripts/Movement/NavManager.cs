@@ -16,14 +16,10 @@ public class NavManager : MonoBehaviour
     bool inAggroRange; // Turns true when player is in aggro range (distance between player/enemy is less than enemy's aggroRange)
 
     // for random movement
-    float randomPositionRange = 15f; // Should possibly be moved to a static script - used to determine distance from the enemy unit's current to target position
     bool foundDestination; // Set to true when a random destination is checked and valid for the enemy to move to
     Vector3 randomDestination; // Set to the random destination that is selected during FindRandomPosition()
 
     NavMeshAgent agent; // The gameObject's NavMesh Agent to be used for navigation
-
-    float playerStoppingDistance = 3.5f, randomStoppingDistance = 0f; // Should possibly be moved to static script
-                                                                      // used to determine where to stop when pathing to a random (or player's) position
 
     void Start()
     {
@@ -55,38 +51,38 @@ public class NavManager : MonoBehaviour
     {
         // if player is within aggro range threshold, move towards them
 
-        if (GetRangeToPlayer() <= enemy.aggroRange)
+        if (GetRangeToPlayer() <= enemy.GetAggroRange())
         {
             // move towards player
             // Debug.Log("Player is within range, aggro to them");
 
-            if (agent.speed != enemy.enemySO.chaseSpeed)
+            if (agent.speed != enemy.GetEnemy().chaseSpeed)
             {
-                agent.speed = enemy.enemySO.chaseSpeed;
+                agent.speed = enemy.GetEnemy().chaseSpeed;
             }
 
-            if (agent.stoppingDistance != playerStoppingDistance)
+            if (agent.stoppingDistance != CombatManager.enemyPathingToPlayerStoppingDistance)
             {
-                agent.stoppingDistance = playerStoppingDistance;
+                agent.stoppingDistance = CombatManager.enemyPathingToPlayerStoppingDistance;
             }
 
             MoveToPlayer();
 
             inAggroRange = true;
         }
-        else if (GetRangeToPlayer() > enemy.aggroRange)
+        else if (GetRangeToPlayer() > enemy.GetAggroRange())
         {
             // if not, move randomly
             inAggroRange = false;
 
-            if (agent.speed != enemy.enemySO.moveSpeed)
+            if (agent.speed != enemy.GetEnemy().moveSpeed)
             {
-                agent.speed = enemy.enemySO.moveSpeed;
+                agent.speed = enemy.GetEnemy().moveSpeed;
             }
 
-            if (agent.stoppingDistance != randomStoppingDistance)
+            if (agent.stoppingDistance != CombatManager.enemyPathingToRandomStoppingDistance)
             {
-                agent.stoppingDistance = randomStoppingDistance;
+                agent.stoppingDistance = CombatManager.enemyPathingToRandomStoppingDistance;
             }
 
             MoveRandomly();
@@ -124,8 +120,8 @@ public class NavManager : MonoBehaviour
             float curX = transform.position.x;
             float curZ = transform.position.z;
 
-            float randX = UnityEngine.Random.Range(curX - randomPositionRange, curX + randomPositionRange);
-            float randZ = UnityEngine.Random.Range(curZ - randomPositionRange, curZ + randomPositionRange);
+            float randX = UnityEngine.Random.Range(curX - CombatManager.enemyRandomPathingRange, curX + CombatManager.enemyRandomPathingRange);
+            float randZ = UnityEngine.Random.Range(curZ - CombatManager.enemyRandomPathingRange, curZ + CombatManager.enemyRandomPathingRange);
 
             Vector3 tempPosition = new Vector3(randX, 0, randZ);
 
@@ -221,7 +217,7 @@ public class NavManager : MonoBehaviour
     /// </summary>
     public bool InAttackRange()
     {
-        if (GetRangeToPlayer() <= enemy.attackRange)
+        if (GetRangeToPlayer() <= enemy.GetAttackRange())
         {
             return true;
         } else

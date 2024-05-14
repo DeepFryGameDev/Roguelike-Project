@@ -22,7 +22,7 @@ public class SpawnPoint : MonoBehaviour
     /// </summary>
     IEnumerator SetSpawn()
     {
-        Debug.Log("Player should spawn at " + transform.position + " with rotation " + transform.eulerAngles);
+        //Debug.Log("Player should spawn at " + transform.position + " with rotation " + transform.eulerAngles);
 
         player.GetComponent<Rigidbody>().isKinematic = true;
         player.transform.position = transform.position;
@@ -32,6 +32,6 @@ public class SpawnPoint : MonoBehaviour
 
         player.GetComponent<Rigidbody>().isKinematic = false;
 
-        Debug.Log("Players position: " + player.transform.position);
+        //Debug.Log("Players position: " + player.transform.position);
     }
 }

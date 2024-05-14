@@ -21,6 +21,6 @@ public class SlimeTestEvent : BaseInteractable
     public override void OnInteract()
     {
         base.OnInteract();
-        bse.TransitionToScene(1);
+        bse.TransitionToScene(2);
     }
 }

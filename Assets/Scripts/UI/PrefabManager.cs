@@ -8,13 +8,26 @@ using UnityEngine.UI;
 public class PrefabManager : MonoBehaviour
 {
     [Tooltip("Set to slider for stamina gauge")]
-    public Slider staminaSlider;
+    [SerializeField] Slider staminaSlider;
+    public Slider GetStaminaSlider() { return staminaSlider; }
+
     [Tooltip("Set to stamina bar image")]
-    public Image stamBarImage;
+    [SerializeField] Image staminaBarImage;
+    public Image GetStaminaBarImage() { return staminaBarImage; }
 
     [Tooltip("Set to desired color for the stamina bar to be set to when player is unable to sprint or use stamina")]
-    public Color outOfStaminaBarColor = Color.black;
+    [SerializeField] Color outOfStaminaBarColor = Color.black;
+    public Color GetOutOfStaminaBarColor() { return outOfStaminaBarColor; }
 
     [Tooltip("Set to InteractionPanel object in [UI]")]
-    public GameObject interactionKeyPanel;
+    [SerializeField] GameObject interactionKeyPanel;
+    public GameObject GetInteractionKeyPanel() { return interactionKeyPanel; }
+
+    [Tooltip("Set to slider for health gauge")]
+    [SerializeField] Slider healthSlider;
+    public Slider GetHealthSlider() { return healthSlider; }
+
+    [Tooltip("Set to health bar image")]
+    [SerializeField] Image healthBarImage;
+    public Image GetHealthBarImage() { return healthBarImage; }
 }

@@ -7,25 +7,32 @@ using UnityEngine;
 public class BaseEnemy : MonoBehaviour
 {
     [Tooltip("Attach Enemy Scriptable Object for the desired enemy")]
-    public EnemyScriptableObject enemySO;
+    [SerializeField] EnemyScriptableObject enemySO;
+    public EnemyScriptableObject GetEnemy() { return enemySO; }
 
     [Tooltip("If true, will show the enemy's range to aggro and range to attack the player in the editor")]
-    public bool viewRangeGizmos;
+    [SerializeField] bool viewRangeGizmos;
 
     [Tooltip("Distance from the enemy to the player before the enemy begins chasing the player")]
-    public float aggroRange;
+    [SerializeField] float aggroRange = 50f;
+    public float GetAggroRange() { return aggroRange; }
 
     [Tooltip("Distance from the enemy to the player before the enemy starts attacking the player")]
-    public float attackRange;
+    [SerializeField] float attackRange = 30f;
+    public float GetAttackRange() { return attackRange; }
 
-    [Tooltip("HP of the enemy")]
-    [ReadOnly] public int currentHP;
+    EnemySpawner spawnedFrom; // The enemySpawner that spawned this enemy
+    public EnemySpawner GetSpawnedFrom() { return spawnedFrom; }
+    public void SetSpawnedFrom(EnemySpawner spawnedFrom) { this.spawnedFrom = spawnedFrom; }
 
-    // Collider attached to the object
-    Collider col;
+    // HP of the enemy
+    int currentHP;
 
     // Set to the enemy's max HP when the object is created
     int maxHP;
+
+    // Collider attached to the object
+    Collider col;
 
     // Used to grant the player experience upon defeat
     PlayerManager playerManager;
@@ -76,7 +83,7 @@ public class BaseEnemy : MonoBehaviour
     void SetCollisionTriggers(GameObject obj)
     {
         // Debug.Log("Setting collision trigger for " + gameObject.name);
-        Instantiate(obj, enemyAttackManager.attackCollisionTriggerTransform);
+        Instantiate(obj, enemyAttackManager.GetAttackCollisionTriggerTransform());
     }
 
     /// <summary>

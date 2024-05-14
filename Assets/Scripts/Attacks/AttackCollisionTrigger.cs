@@ -9,12 +9,17 @@ public class AttackCollisionTrigger : MonoBehaviour
     [Tooltip("Whether the attacking unit is the player or an enemy")]
     public EnumHandler.UnitTypes attackingUnit;
 
-    [Tooltip("Attack that this trigger will be firing off - set at runtime")]
-    [ReadOnly] public AttackScriptableObject attack;
+    // Attack that this trigger will be firing off - set automatically at runtime
+    AttackScriptableObject attack;
+    public AttackScriptableObject GetAttack() { return attack; }
+    public void SetAttack(AttackScriptableObject attack) { this.attack = attack; }
 
-    [Tooltip("If the attack has just recently fired and is waiting until it can be used again")]
-    [ReadOnly] public bool onCooldown;
+    // If the attack has just recently fired and is waiting until it can be used again
+    bool onCooldown; 
+    public bool GetOnCooldown() { return onCooldown; }
+    public void SetOnCooldown(bool set) { onCooldown = set; }
 
+    // Used to set corresponding unit's attack manager
     AttackManager am;
     EnemyAttackManager eam;
 
@@ -54,10 +59,10 @@ public class AttackCollisionTrigger : MonoBehaviour
             switch (attackingUnit) // Setting attack var of this trigger to the attack attached to the enemy or player's basicAttack
             {
                 case EnumHandler.UnitTypes.PLAYER:
-                    attack = am.playerObj.GetComponent<BasePlayer>().basicAttack;
+                    attack = am.GetBasePlayer().GetBasicAttack();
                     break;
                 case EnumHandler.UnitTypes.ENEMY:
-                    attack = eam.enemyObj.GetComponent<BaseEnemy>().enemySO.basicAttack;
+                    attack = eam.GetBaseEnemy().GetEnemy().basicAttack;
                     break;
             }
         }
@@ -73,7 +78,7 @@ public class AttackCollisionTrigger : MonoBehaviour
             switch (attackingUnit) // Calls OnTrigger function of attack manager when there is an opposing unit inside this trigger
             {
                 case EnumHandler.UnitTypes.PLAYER:
-                    if (collidedObj.CompareTag("Enemy"))
+                    if (collidedObj.CompareTag("Enemy") || collidedObj.CompareTag("EnemySpawner"))
                     {
                         am.OnTrigger(this, attack);
                     }

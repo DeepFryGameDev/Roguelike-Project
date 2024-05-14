@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // Purpose: Controls all of the player's base stats and basic functions
@@ -7,34 +8,43 @@ using UnityEngine;
 public class BasePlayer : MonoBehaviour
 {
     [Tooltip("Base Max Health Points for the player - taken into account before class stats")]
-    public int maxHP;
+    [SerializeField] int maxHP;
+    public int GetMaxHP() { return maxHP; }
 
     [Tooltip("Base Max Stamina for the player - taken into account before class stats - used to determine sprinting duration")]
-    public float maxStamina;
+    [SerializeField] float maxStamina;
+    public float GetMaxStamina() {  return maxStamina; }
 
     //---
 
-    [Tooltip("Current Health Points")]
-    [ReadOnly] public int currentHP;
+    // Current Health Points
+    int currentHP;
+    public int GetCurrentHP() {  return currentHP; }
 
-    [Tooltip("Current Stamina")]
-    [ReadOnly] public float currentStamina;
+    // Current Stamina
+    float currentStamina;
+    public float GetCurrentStamina() { return currentStamina; }
+    public void SetCurrentStamina(float stamina) { currentStamina = stamina;}
 
-    [Tooltip("Current Experience Points")]
-    [ReadOnly] public int exp;
+    // Current Experience Points
+    int exp;
 
-    [Tooltip("Current level")]
-    [ReadOnly] public int level;
+    // Current level
+    int level;
 
-    [Tooltip("The player's basic attack to be automatically equipped")]
-    [ReadOnly] public AttackScriptableObject basicAttack;
+    // The player's basic attack to be automatically equipped
+    AttackScriptableObject basicAttack;
+    public AttackScriptableObject GetBasicAttack() { return basicAttack; }
+    public void SetBasicAttack(AttackScriptableObject basicAttack) { this.basicAttack = basicAttack; }
 
-    [Tooltip("Attacks that have been gained throughout the game")]
-    [ReadOnly] public AttackScriptableObject[] secondaryAttacks;
+    // Attacks that have been gained throughout the game
+    AttackScriptableObject[] secondaryAttacks;
 
-    int currentExpToLevel; // Experience points needed to progress to the next level
+    // Experience points needed to progress to the next level
+    int currentExpToLevel;
 
-    PlayerManager pm; // Used to check experience points needed to the next level
+    // Used to handle experience points, stamina, and health
+    PlayerManager pm;
 
     /// <summary>
     /// All inherited classes should call base.Awake() in 'protected override void Awake()'
@@ -53,7 +63,6 @@ public class BasePlayer : MonoBehaviour
         currentHP = maxHP;
 
         currentStamina = maxStamina;
-        Debug.Log("Setting currentStamina to " + currentStamina);
 
         level = 1;
 
@@ -82,11 +91,30 @@ public class BasePlayer : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHP -= damage;
+
+        pm.UpdateHealthBar();
+
         if (currentHP <= 0)
         {
             // die
             Die();
         }
+    }
+
+    /// <summary>
+    /// Raises players health points by the provided value
+    /// </summary>
+    /// <param name="healthToHeal">Amount of health points to be replenished</param>
+    public void Heal(int healthToHeal)
+    {
+        currentHP += healthToHeal;
+
+        if (currentHP >= maxHP)
+        {
+            currentHP = maxHP;
+        }
+
+        pm.UpdateHealthBar();
     }
 
     /// <summary>
@@ -102,6 +130,15 @@ public class BasePlayer : MonoBehaviour
     /// </summary>
     void Die()
     {
-        
+        // Turn off player controls
+
+        // Display GameOver
+        UIHandler uih = FindObjectOfType<UIHandler>();
+
+        uih.DisplayGameOver();
+
+        // Show cursor
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
