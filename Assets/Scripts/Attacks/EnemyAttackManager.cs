@@ -52,6 +52,7 @@ public class EnemyAttackManager : MonoBehaviour
             ParticleCollision pc = newParticle.GetComponent<ParticleCollision>();
             pc.SetAttack(attack);
             pc.sourceUnitType = EnumHandler.UnitTypes.ENEMY;
+            pc.SetUnit(baseEnemy);
 
             // Add trigger for player
             ParticleSystem ps = newParticle.GetComponent<ParticleSystem>();
@@ -61,8 +62,8 @@ public class EnemyAttackManager : MonoBehaviour
                 ps.trigger.SetCollider(i, null);
             }
 
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            ps.trigger.SetCollider(0, player.transform.GetChild(0).GetComponent<Collider>());
+            GameObject player = GameObject.FindGameObjectWithTag("PlayerAttackable");
+            ps.trigger.SetCollider(0, player.GetComponent<Collider>());
 
             //wait for cooldown of attack
             yield return new WaitForSeconds(attack.cooldown);

@@ -7,8 +7,6 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    [Tooltip("Base speed at which the player moves")]
-    [SerializeField] float moveSpeed;
     [Tooltip("Base speed at which the player moves while sprinting")]
     [SerializeField] float sprintSpeed;
 
@@ -32,8 +30,11 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Turns true when player is not in the air")]
     bool grounded;
 
-    [Tooltip("Set to the Player -> Orientation Transform")]
-    [SerializeField] Transform orientation;
+    Transform orientation; // Set to the Player -> Orientation Transform during SetVars()
+
+    float moveSpeedModifier = 10f; // Speed modifier used during calculation to determine how fast player should move
+
+    float combatCameraMovingBackwardsSpeedModifier = 5f; // Speed modifier used during calculation to determine how fast player should move when moving backwards during combat
 
     float horizontalInput; // Set to any movement from the player along the X axis
     float verticalInput; // Set to any movement from the player along the Y axis
@@ -46,6 +47,12 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody rb; // Used to add force to the GameObject so the player is able to move
     Animator anim; // Used to change the player's animations while walking and sprinting
 
+    CameraManager cm; // Used to get the current camera mode so user input can be provided to the player's animation.  Also used to disable sprinting while moving backwards in combat mode
+
+    Collider col; // Used to determine the distance to the ground via raycast
+
+    bool movementSet; // Set to true when all movement variables have been set for a game startup
+
     static PlayerMovement instance; // For singleton to ensure script persists across scenes
 
     // -- Disabled for now - jumping is not active
@@ -56,8 +63,6 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         Singleton();
-
-        SetVars();
     }
 
     void Singleton()
@@ -73,40 +78,64 @@ public class PlayerMovement : MonoBehaviour
         DontDestroyOnLoad(gameObject); //set this to be persistable across scenes
     }
 
-    void SetVars()
-    {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-
-        anim = GetComponentInChildren<Animator>();
-
-        // readyToJump = true;
-
-        player = GetComponent<BasePlayer>();
-        pm = GetComponent<PlayerManager>();
-    }
-
     void FixedUpdate()
     {
-        MovePlayer();
+        if (movementSet) // If movement variables are all set for game startup, player can move
+        {
+            MovePlayer();
+        }
     }
 
     void Update()
     {
-        // ground check
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * .1f, whatIsGround);
-
-        GetInput();
-        SpeedControl();
-
-        // handle drag
-        if (grounded)
+        if (movementSet)
         {
-            rb.drag = groundDrag;
-        } else
-        {
-            rb.drag = 0;
+            // ground check
+            //grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * .1f, whatIsGround);
+            grounded = Physics.Raycast(transform.position, Vector3.down, col.bounds.extents.y + .1f, whatIsGround);
+
+            GetInput();
+            SpeedControl();
+
+            HandleAnimations();
+
+            // handle drag
+            if (grounded)
+            {
+                //Debug.Log("Grounded");
+                rb.drag = groundDrag;
+            }
+            else
+            {
+                //Debug.Log("Not grounded");
+                rb.drag = 0;
+            }            
         }
+    }
+
+    /// <summary>
+    /// Sets the vars needed for game startup
+    /// </summary>
+    public void SetVars(GameObject playerParent)
+    {
+        pm = GetComponent<PlayerManager>();
+
+        cm = FindObjectOfType<CameraManager>();
+
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+
+        anim = playerParent.GetComponent<Animator>();
+
+        // readyToJump = true;
+
+        player = playerParent.GetComponent<BasePlayer>();
+
+        col = playerParent.GetComponentInChildren<Collider>();
+
+        orientation = playerParent.transform.Find("Orientation");
+
+        movementSet = true;
     }
 
     /// <summary>
@@ -121,24 +150,15 @@ public class PlayerMovement : MonoBehaviour
         {
             if (Input.GetKey(sprintKey) && canSprint())
             {
-                anim.SetBool("isWalking", false);
-                anim.SetBool("isRunning", true);
-
                 pm.ReduceStaminaFromSprint();
                 pm.SetStandingStill(false);
             } else
-            {
-                anim.SetBool("isWalking", true);
-                anim.SetBool("isRunning", false);
-
+            { 
                 pm.SetStandingStill(false);
                 pm.RecoverStamina();
             }
         } else
         {
-            anim.SetBool("isWalking", false);
-            anim.SetBool("isRunning", false);
-
             pm.SetStandingStill(true);
             pm.RecoverStamina();
         }
@@ -155,24 +175,80 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
+    /// The animator attached to the player will have bools changed based on player's movement input
+    /// </summary>
+    void HandleAnimations()
+    {
+        if (horizontalInput != 0 || verticalInput != 0)
+        {
+            if (Input.GetKey(sprintKey) && canSprint())
+            {
+                anim.SetBool("isWalking", false);
+                anim.SetBool("isRunning", true);
+            }
+            else
+            {
+                anim.SetBool("isWalking", true);
+                anim.SetBool("isRunning", false);
+            }
+        }
+        else
+        {
+            anim.SetBool("isWalking", false);
+            anim.SetBool("isRunning", false);
+        }
+
+        if (cm.currentMode == EnumHandler.CameraModes.COMBAT)
+        {
+            anim.SetFloat("xDir", Input.GetAxis("Horizontal"));
+            anim.SetFloat("zDir", Input.GetAxis("Vertical"));
+        }   
+    }
+
+    /// <summary>
     /// Uses the attached RigidBody to move the player around the world
+    /// BASIC camera mode is one speed, but COMBAT is slower when moving backwards
     /// </summary>
     void MovePlayer()
     {
         // calculate movement direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
+        float speedModifier = 0;
+
         // on ground
         if (grounded)
         {
-            if (Input.GetKey(sprintKey) && canSprint())
+            switch (cm.currentMode) // Sets speed modifier for moving
             {
-                rb.AddForce(moveDirection.normalized * sprintSpeed * 10f, ForceMode.Force);
-            } else
-            {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+                case EnumHandler.CameraModes.BASIC:
+                    speedModifier = moveSpeedModifier;
+                    break;
+                case EnumHandler.CameraModes.COMBAT:
+                    if (!IsMovingBackwards())
+                    {
+                        speedModifier = moveSpeedModifier;
+
+                        //Debug.Log("Normal move speed: " + finalSpeed);
+                    }
+                    else
+                    {
+                        //Debug.Log("move at half speed");
+                        speedModifier = combatCameraMovingBackwardsSpeedModifier;
+
+                        //Debug.Log("Half move speed: " + finalSpeed);
+                    }
+                    break;
             }
-            
+
+            if (Input.GetKey(sprintKey) && canSprint()) // Player is sprinting
+            {
+                rb.AddForce(moveDirection.normalized * (sprintSpeed * speedModifier), ForceMode.Force);
+            }
+            else // Player is walking
+            {
+                rb.AddForce(moveDirection.normalized * (pm.GetMoveSpeed() * speedModifier), ForceMode.Force);
+            }
         }
 
         // in air
@@ -180,27 +256,59 @@ public class PlayerMovement : MonoBehaviour
         {
             if (Input.GetKey(sprintKey) && canSprint())
             {
-                rb.AddForce(moveDirection.normalized * sprintSpeed * 10f * airMultiplier, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * sprintSpeed * moveSpeedModifier * airMultiplier, ForceMode.Force);
             } else
             {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * pm.GetMoveSpeed() * moveSpeedModifier * airMultiplier, ForceMode.Force);
             }
         }
     }
 
     /// <summary>
-    /// Returns true if player's stamina is greater than 0 and has not been fully depleted
+    /// Simply checks if the player is moving backwards
+    /// </summary>
+    /// <returns>True if vertical input is < 0. False if >= 0.</returns>
+    bool IsMovingBackwards()
+    {
+        if (verticalInput < 0 )
+        {
+            return true;
+        } else
+        {
+            return false;
+        }        
+    }
+
+    /// <summary>
+    /// Returns true if player's stamina is greater than 0 and has not been fully depleted and is not moving backward (in combat)
     /// </summary>
     bool canSprint()
     {
+        // Debug.Log("Player current stamina: " + player.GetCurrentStamina());
+
         if (player.GetCurrentStamina() > 0 && !pm.GetStamDepleted())
         {
-            return true;
+            if (cm.currentMode == EnumHandler.CameraModes.COMBAT)
+            {
+                if (Input.GetAxis("Vertical") >= 0)
+                {
+                    // Debug.Log("can sprint, vertical is >= 0");
+                    return true; // Player has enough stamina, and is not moving backwards
+                } else
+                {
+                    Debug.Log("Cannot sprint, vertical is < 0");
+                    return false; // Player has enough stamina, but they are moving backwards
+                }
+            } else
+            {
+                // Debug.Log("Player has enough stamina");
+                return true; // Player has enough stamina
+            }            
         }
         else
         {
-            //Debug.Log("Unable to sprint because player's stam: " + player.currentStamina + " and stamDepleted: " + pm.stamDepleted);
-            return false;
+            Debug.Log("Player does not have enough stamina");
+            return false; // Player does not have stamina to sprint
         }
     }
 
@@ -212,9 +320,9 @@ public class PlayerMovement : MonoBehaviour
         Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         // limit velocity if needed
-        if (flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > pm.GetMoveSpeed())
         {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            Vector3 limitedVel = flatVel.normalized * pm.GetMoveSpeed();
             rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
         }
 

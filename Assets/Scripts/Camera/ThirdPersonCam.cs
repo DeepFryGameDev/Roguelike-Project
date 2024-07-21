@@ -3,57 +3,37 @@ using UnityEngine;
 // Purpose: Handles the camera positioning and rotation for the different camera modes as well as keeps camera looking behind player when they move around
 // Directions: Attach to [Cameras] -> CameraHolder -> PlayerCam Transform
 // Other notes: Should all be moved over to CameraManager eventually
+// Tutorial followed: https://www.youtube.com/watch?v=UCwwn2q4Vys
 
 public class ThirdPersonCam : MonoBehaviour
 {
-    [Tooltip("The transform to be used to determine player's orientation")]
-    [SerializeField] Transform orientation;
+    Transform orientation; // The transform to be used to determine player's orientation
+    public void SetOrientation(Transform orientation) { this.orientation = orientation; }
 
-    [Tooltip("The transform of the player, used to calculate view direction")]
-    [SerializeField] Transform player;
+    Transform playerParent; // The transform of the [Player] object in the hierarchy
+    public void SetPlayerParent(Transform playerParent) { this.playerParent = playerParent; }
 
-    [Tooltip("Used with Vector3.slerp to move the camera's view with the player's view direction")]
-    [SerializeField] Transform playerObj;
+    Transform playerObj; // Used with Vector3.slerp to move the camera's view with the player's view direction
+    public void SetPlayerObj(Transform playerObj) { this.playerObj = playerObj; }
 
-    [Tooltip("When currentStyle is 'Combat', this is the transform used to keep the camera focused forward")]
-    [SerializeField] Transform combatLookAt;
+    Transform combatLookAt; // When currentStyle is 'Combat', this is the transform used to keep the camera focused forward
+    public void SetCombatLookAt(Transform combatLookAt) { this.combatLookAt = combatLookAt; }
 
-    [Tooltip("Set to the camera used for third person view")]
-    [SerializeField] GameObject thirdPersonCam;
+    float rotationSpeed = 7f; // Rotation speed of the camera as the player moves around
 
-    [Tooltip("Set to the camera used for Combat camera style")]
-    [SerializeField] GameObject combatCam;
+    CameraManager cameraManager; // Changes camera aim based on camera mode
 
-    [Tooltip("Set to the camera used for top-down camera style")]
-    [SerializeField] GameObject topDownCam;
-
-    //public Rigidbody rb;
-
-    [Tooltip("Rotation speed of the camera as the player moves around")]
-    [SerializeField] float rotationSpeed;
-
-    [Tooltip("The default camera mode")]
-    public EnumHandler.CameraModes currentMode;
-    
+    bool cameraSetupComplete; // Set to true when the camera variables have all been set up for game startup
+    public void SetCameraSetupComplete(bool set) {cameraSetupComplete = set; }
 
     void Start()
     {
-        HideCursor();
-    }
-
-    /// <summary>
-    /// Simply sets the cursor's lockstate to Locked so it stays focused and hides it
-    /// </summary>
-    void HideCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        cameraManager = FindObjectOfType<CameraManager>();
     }
 
     void Update()
     {
-        SetCameraMode();
-        UpdateRotations();
+        if (cameraSetupComplete) UpdateRotations();
     }
 
     /// <summary>
@@ -62,11 +42,11 @@ public class ThirdPersonCam : MonoBehaviour
     void UpdateRotations()
     {
         // rotate orientation
-        Vector3 viewDir = player.position - new Vector3(transform.position.x, player.position.y, transform.position.z);
+        Vector3 viewDir = playerParent.position - new Vector3(transform.position.x, playerParent.position.y, transform.position.z);
         orientation.forward = viewDir.normalized;
 
         // rotate player object
-        if (currentMode == EnumHandler.CameraModes.BASIC || currentMode == EnumHandler.CameraModes.TOPDOWN)
+        if (cameraManager.currentMode == EnumHandler.CameraModes.BASIC || cameraManager.currentMode == EnumHandler.CameraModes.TOPDOWN)
         {
             float horizontalInput = Input.GetAxis("Horizontal");
             float verticalInput = Input.GetAxis("Vertical");
@@ -77,7 +57,7 @@ public class ThirdPersonCam : MonoBehaviour
                 playerObj.forward = Vector3.Slerp(playerObj.forward, inputDir.normalized, Time.deltaTime * rotationSpeed);
             }
         }
-        else if (currentMode == EnumHandler.CameraModes.COMBAT)
+        else if (cameraManager.currentMode == EnumHandler.CameraModes.COMBAT) // When camera is on 'COMBAT' mode, it will always stay aimed in the direction the player is facing
         {
             Vector3 dirToCombatLookAt = combatLookAt.position - new Vector3(transform.position.x, combatLookAt.position.y, transform.position.z);
             orientation.forward = dirToCombatLookAt.normalized;
@@ -87,29 +67,12 @@ public class ThirdPersonCam : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets style of camera control
+    /// Simply sets the cursor's lockstate to Locked so it stays focused and hides it
+    /// Should eventually be moved to some kind of system script to handle random tasks like this
     /// </summary>
-    void SetCameraMode()
+    public void HideCursor()
     {
-        // switch styles
-        if (Input.GetKeyDown(KeyCode.Alpha1)) SwitchCameraMode(EnumHandler.CameraModes.BASIC);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) SwitchCameraMode(EnumHandler.CameraModes.COMBAT);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) SwitchCameraMode(EnumHandler.CameraModes.TOPDOWN);
-    }
-
-    /// <summary>
-    /// Disables all cameras and sets new camera mode from given argument
-    /// </summary>
-    void SwitchCameraMode(EnumHandler.CameraModes newMode)
-    {
-        combatCam.SetActive(false);
-        thirdPersonCam.SetActive(false);
-        topDownCam.SetActive(false);
-
-        if (newMode == EnumHandler.CameraModes.BASIC) thirdPersonCam.SetActive(true);
-        if (newMode == EnumHandler.CameraModes.COMBAT) combatCam.SetActive(true);
-        if (newMode == EnumHandler.CameraModes.TOPDOWN) topDownCam.SetActive(true);
-
-        currentMode = newMode;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }

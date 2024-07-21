@@ -10,52 +10,10 @@ using UnityEngine.SceneManagement;
 public class BaseScriptedEvent : MonoBehaviour
 {
     //public string method; //name of the method to be run
-    GameManager gameManager; //the game manager
 
-    public int tempSceneIndex, currentSceneIndex;
+    public int currentSceneIndex; // Set when scene transitions to the newly loaded scene
 
     //GameMenu menu;
-
-    enum cursorModes
-    {
-        DIALOGUECHOICE,
-        IDLE
-    }
-
-    [HideInInspector] public bool confirmPressed;
-    bool checkForConfirmPressed;
-
-    [HideInInspector] public bool messageFinished;
-
-    AudioSource audioSource;
-
-    //Enums
-    [HideInInspector]
-    public enum MenuButtons
-    {
-        Item,
-        Magic,
-        Equip,
-        Status,
-        Talents,
-        Party,
-        Grid,
-        Quests,
-        Bestiary
-    }
-    [HideInInspector] public MenuButtons menuButton;
-
-    private void Start()
-    {
-        gameManager = GameObject.Find("[GameManager]").GetComponent<GameManager>(); //sets gameManager to the game manager object in scene
-
-        messageFinished = true;
-    }
-
-    private void Update()
-    {
-
-    }
 
     //DIFFERENT FUNCTIONS THAT CAN BE RUN BY ANY EVENT SCRIPT
 
@@ -94,20 +52,17 @@ public class BaseScriptedEvent : MonoBehaviour
 
     #region ---SCENE MANAGEMENT---
 
+    /// <summary>
+    /// Will probably be re-worked, but works for now
+    /// Simply uses SceneManager to load the given sceneIndex in build settings
+    /// </summary>
+    /// <param name="sceneIndex"></param>
     public void TransitionToScene(int sceneIndex)
     {
         Debug.Log("Loading scene: " + sceneIndex + ".");
         SceneManager.LoadScene(sceneIndex);
 
         currentSceneIndex = sceneIndex;
-    }
-
-    /// <summary>
-    /// Forces menu to be opened
-    /// </summary>
-    public void OpenMenu()
-    {
-        
     }
 
     //void OpenSave
@@ -188,7 +143,7 @@ public class BaseScriptedEvent : MonoBehaviour
     /// <param name="SE">Sound effect to play</param>
     void PlaySE(AudioClip SE)
     {
-        audioSource.PlayOneShot(SE);
+        // audioSource.PlayOneShot(SE);
     }
 
     //void PlayBGM
@@ -340,16 +295,6 @@ public class BaseScriptedEvent : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// Enables or disables ability to access menu buttons (Items, Magic, etc)
-    /// </summary>
-    /// <param name="button">Button to change access</param>
-    /// <param name="canAccess">If true, button can be accessed</param>
-    public void ChangeMenuButtonAccess(MenuButtons button, bool canAccess)
-    {
-
-    }
-
     #endregion
 
     #region ---SPRITES---
@@ -466,7 +411,7 @@ public class BaseScriptedEvent : MonoBehaviour
     /// <param name="gold">Number of gold to be added/subtracted</param>
     public void ChangeGold(int gold)
     {
-        GameManager.instance.gold += gold;
+        GameManager.ChangeGold(gold);
     }
 
     /// <summary>

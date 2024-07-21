@@ -4,14 +4,24 @@ using UnityEngine;
 // Directions: Should be attached to every enemy gameobject
 // Other notes: 
 
-public class BaseEnemy : MonoBehaviour
+public class BaseEnemy : BaseAttackableUnit
 {
-    [Tooltip("Attach Enemy Scriptable Object for the desired enemy")]
-    [SerializeField] EnemyScriptableObject enemySO;
-    public EnemyScriptableObject GetEnemy() { return enemySO; }
+    [Tooltip("Base Max Health Points for the player - taken into account before class stats")]
+    [SerializeField] protected int maxHP;
+    public int GetMaxHP() { return maxHP; }
 
-    [Tooltip("If true, will show the enemy's range to aggro and range to attack the player in the editor")]
-    [SerializeField] bool viewRangeGizmos;
+    [Tooltip("How quickly the enemy's gameObject will travel around the world")]
+    public int moveSpeed;
+
+    [Tooltip("How quickly the enemy's gameObject will travel when the player has aggro from the enemy")]
+    public int chaseSpeed;
+
+    [Tooltip("Amount of EXP provided when the enemy is killed")]
+    public int expGiven;
+
+    [Tooltip("Enemy's attack to be fired")]
+    [SerializeField] AttackScriptableObject attack; 
+    public AttackScriptableObject GetAttack() { return attack; }
 
     [Tooltip("Distance from the enemy to the player before the enemy begins chasing the player")]
     [SerializeField] float aggroRange = 50f;
@@ -21,15 +31,12 @@ public class BaseEnemy : MonoBehaviour
     [SerializeField] float attackRange = 30f;
     public float GetAttackRange() { return attackRange; }
 
+    [Tooltip("If true, will show the enemy's range to aggro and range to attack the player in the editor")]
+    [SerializeField] bool viewRangeGizmos;
+
     EnemySpawner spawnedFrom; // The enemySpawner that spawned this enemy
     public EnemySpawner GetSpawnedFrom() { return spawnedFrom; }
     public void SetSpawnedFrom(EnemySpawner spawnedFrom) { this.spawnedFrom = spawnedFrom; }
-
-    // HP of the enemy
-    int currentHP;
-
-    // Set to the enemy's max HP when the object is created
-    int maxHP;
 
     // Collider attached to the object
     Collider col;
@@ -43,6 +50,8 @@ public class BaseEnemy : MonoBehaviour
     // Set to the enemy's attached Attack Manager
     EnemyAttackManager enemyAttackManager;
 
+    PrefabManager prefabManager;
+
     void Awake()
     {
         SetVars();
@@ -51,16 +60,42 @@ public class BaseEnemy : MonoBehaviour
 
     void SetVars()
     {
-        maxHP = enemySO.HP;
-        currentHP = maxHP;
-
         enemyAttackManager = GetComponent<EnemyAttackManager>();
+
+        prefabManager = FindAnyObjectByType<PrefabManager>();
 
         playerManager = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>();
 
         col = GetComponent<Collider>();
 
-        navManager = GetComponent<NavManager>();        
+        navManager = GetComponent<NavManager>();
+
+        SetStrength(GetBaseStrength());
+        SetEndurance(GetBaseEndurance());
+        SetAgility(GetBaseAgility());
+        SetDexterity(GetBaseDexterity());
+        SetIntelligence(GetBaseIntelligence());
+        SetResist(GetBaseResist());
+
+        currentHP = GetMaxHP();
+    }
+
+    /// <summary>
+    /// As enemy does not have equipment, BaseArmor is the true souce of data for unit's armor
+    /// </summary>
+    /// <returns>Unit's BaseArmor</returns>
+    public override int GetArmor()
+    {
+        return GetBaseArmor();
+    }
+
+    /// <summary>
+    /// As enemy does not have equipment, BaseMagicResist is the true souce of data for unit's magic resist
+    /// </summary>
+    /// <returns>Unit's BaseMagicResist</returns>
+    public override int GetMagicResist()
+    {
+        return GetBaseMagicResist();
     }
 
     /// <summary>
@@ -73,7 +108,7 @@ public class BaseEnemy : MonoBehaviour
             Debug.LogError("EAM is null on " + gameObject.name);
         }
 
-        SetCollisionTriggers(enemySO.basicAttack.collisionTrigger);
+        SetCollisionTriggers(attack.collisionTrigger);
     }
 
     /// <summary>
@@ -90,8 +125,11 @@ public class BaseEnemy : MonoBehaviour
     /// Lowers the enemy's HP by the amount of damage provided, and processes death if HP is 0 or below
     /// </summary>
     /// <param name="damage">Amount of damage to be applied</param>
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, EnumHandler.DamageTextTypes textType)
     {
+        // Show damage popup
+        ShowDamagePopup(damage, textType);
+
         currentHP -= damage;
         if (currentHP <= 0)
         {
@@ -101,11 +139,23 @@ public class BaseEnemy : MonoBehaviour
     }
 
     /// <summary>
+    /// Shows damage floating text in UI for user feedback to know what damage was taken when an attack connects.
+    /// (This will need to be moved, but not sure where to put it yet. Does not belong on BaseEnemy)
+    /// </summary>
+    /// <param name="damage">Damage value to be displayed</param>
+    /// <param name="textType">If text should be standard text, or if attack is a critical hit, text is larger</param>
+    void ShowDamagePopup(int damage, EnumHandler.DamageTextTypes textType)
+    {
+        // Debug.Log("Creating popup at " + gameObject.transform.position);
+        DamageFloatingText.Create(gameObject.transform.position, damage, textType);
+    }
+
+    /// <summary>
     /// Increases the player's total experience points by the enemy's EXP value
     /// </summary>
     void GrantPlayerEXP()
     {
-        playerManager.GrantExp(enemySO.expGiven);
+        playerManager.GainExp(expGiven);
     }
 
     /// <summary>
@@ -113,7 +163,7 @@ public class BaseEnemy : MonoBehaviour
     /// </summary>
     void Die()
     {
-        Debug.Log(enemySO.name + " is dead!");
+        Debug.Log(name + " is dead!");
 
         // stop movement on navmesh
         navManager.StopMovement();

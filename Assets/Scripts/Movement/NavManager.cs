@@ -56,9 +56,9 @@ public class NavManager : MonoBehaviour
             // move towards player
             // Debug.Log("Player is within range, aggro to them");
 
-            if (agent.speed != enemy.GetEnemy().chaseSpeed)
+            if (agent.speed != enemy.chaseSpeed)
             {
-                agent.speed = enemy.GetEnemy().chaseSpeed;
+                agent.speed = enemy.chaseSpeed;
             }
 
             if (agent.stoppingDistance != CombatManager.enemyPathingToPlayerStoppingDistance)
@@ -75,9 +75,9 @@ public class NavManager : MonoBehaviour
             // if not, move randomly
             inAggroRange = false;
 
-            if (agent.speed != enemy.GetEnemy().moveSpeed)
+            if (agent.speed != enemy.moveSpeed)
             {
-                agent.speed = enemy.GetEnemy().moveSpeed;
+                agent.speed = enemy.moveSpeed;
             }
 
             if (agent.stoppingDistance != CombatManager.enemyPathingToRandomStoppingDistance)

@@ -1,66 +1,29 @@
-using System;
-using System.Collections;
-using UnityEngine;
+// Purpose: Contains values to be held over the lifetime of the game
+// Directions: Simply call GameManager as it is a static class
+// Other notes:
 
-public class GameManager : MonoBehaviour
+public static class GameManager
 {
     //TOOLS FOR DEBUGGING
 
     //DEBUGGING NOTES
 
     //-----------------------------------
-    public static GameManager instance;
 
     //GOLD
-    public int gold;
+    static int gold; // Currency to buy equipment
+    public static int GetGold() { return gold; }
 
-    //TIME TRACKING
-    [HideInInspector] public int seconds;
-    [HideInInspector] public int minutes;
-    [HideInInspector] public int hours;
-
-    void Awake()
-    {
-        if (instance == null) //check if instance exists
-        {
-            instance = this; //if not set the instance to this
-        }
-        else if (instance != this) //if it exists but is not this instance
-        {
-            Destroy(gameObject); //destroy it
-        }
-        DontDestroyOnLoad(gameObject); //set this to be persistable across scenes
-
-        StartCoroutine(UpdateTime());
-    }
-
-    private void Update()
-    {
-        
-    }
+    static bool gameSet; // When all required values to start the game have been set, this is turned to true.
+    public static bool GetGameSet() { return gameSet; }
+    public static void SetGameSet(bool setGameSet) { gameSet = setGameSet; }
 
     /// <summary>
-    /// Consistently keeps game time updated
+    /// Updates the player's gold count
     /// </summary>
-    IEnumerator UpdateTime()
-    {
-        while (hours != 99 && minutes != 60 && seconds != 60)
-        {
-            yield return new WaitForSecondsRealtime(1);
-            seconds++;
-
-            if (seconds == 60)
-            {
-                minutes++;
-                seconds = 0;
-            }
-
-            if (minutes == 60)
-            {
-                hours++;
-                minutes = 0;
-            }
-        }
+    /// <param name="goldToChange">Increases gold count with a positive value, or decreases gold count with a negative value</param>
+    public static void ChangeGold(int goldToChange) 
+    { 
+        gold += goldToChange;
     }
-
 }

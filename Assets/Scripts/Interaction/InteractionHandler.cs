@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -38,27 +37,16 @@ public class InteractionHandler : MonoBehaviour
 
     void Awake()
     {
-        Singleton();
-    }
+        SetVars();
 
-    void Singleton()
-    {
-        if (instance == null) //check if instance exists
-        {
-            instance = this; //if not set the instance to this
-        }
-        else if (instance != this) //if it exists but is not this instance
-        {
-            Destroy(gameObject); //destroy it
-        }
-        DontDestroyOnLoad(gameObject); //set this to be persistable across scenes
+        SetInteractKeyText();
     }
 
     void Start()
     {
-        SetVars();
+        // SetVars();
 
-        SetInteractKeyText();
+        // SetInteractKeyText();
     }
 
     void SetVars()
@@ -98,6 +86,11 @@ public class InteractionHandler : MonoBehaviour
     /// <param name="toggle">True to display interaction UI graphic, False to hide it</param>
     public void ToggleInteraction(bool toggle)
     {
+        if (pm == null)
+        {
+            Debug.Log("pm is null!");
+        }
+
         pm.GetInteractionKeyPanel().SetActive(toggle);
 
         interactionReady = toggle;

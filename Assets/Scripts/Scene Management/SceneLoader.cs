@@ -2,9 +2,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Purpose: An old script that may not be needed
+// Purpose: Should move loading scenes from BaseScriptedEvent to here
 // Directions: 
-// Other notes:
+// Other notes: This script came from an old project - may not be needed
 
 public class SceneLoader : MonoBehaviour
 {
@@ -15,15 +15,6 @@ public class SceneLoader : MonoBehaviour
     public void LoadScene(string sceneName)
     {
         StartCoroutine(SceneTransition(sceneName));
-    }
-
-    /// <summary>
-    /// Begins scene transition animation when loading a battle scene
-    /// </summary>
-    /// <param name="sceneName">Name of battle scene to be loaded</param>
-    public void LoadBattle(string sceneName)
-    {
-        BattleTransition(sceneName);
     }
 
     /// <summary>
@@ -45,24 +36,6 @@ public class SceneLoader : MonoBehaviour
         yield return new WaitForSeconds(1.5f);
 
         //GameObject.Find("Player").GetComponent<PlayerController2D>().enabled = true;
-    }
-
-    /// <summary>
-    /// Facilitates processing scene transition animation for loading battle
-    /// </summary>
-    /// <param name="sceneName">Name of battle scene to be loaded</param>
-    void BattleTransition(string sceneName)
-    {
-        /*
-        int sceneIndex = sceneIndexFromName(sceneName);
-
-        var battleBlur = new BattleBlurTransition()
-        {
-            nextScene = sceneIndex,
-            duration = 2.0f,
-            blurMax = .04f
-        };
-        TransitionKit.instance.transitionWithDelegate(battleBlur);*/
     }
 
 

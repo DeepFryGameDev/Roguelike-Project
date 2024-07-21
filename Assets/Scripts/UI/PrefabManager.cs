@@ -30,4 +30,20 @@ public class PrefabManager : MonoBehaviour
     [Tooltip("Set to health bar image")]
     [SerializeField] Image healthBarImage;
     public Image GetHealthBarImage() { return healthBarImage; }
+
+    [Tooltip("Set to Resource Panel GameObject")]
+    [SerializeField] GameObject resourcePanel;
+    public GameObject GetResourcePanel() { return resourcePanel; }
+
+    [Tooltip("Set to EXP Panel GameObject")]
+    [SerializeField] GameObject expPanel;
+    public GameObject GetEXPPanel() { return expPanel; }
+
+    [Tooltip("Set to Radial Cooldown Parent Transform")]
+    [SerializeField] Transform radialCooldownParent;
+    public Transform GetRadialCooldown() { return radialCooldownParent; }
+
+    [Tooltip("Set to Floating Combat Text object")]
+    [SerializeField] GameObject floatingCombatText;
+    public GameObject GetFloatingCombatText() { return floatingCombatText; }
 }
